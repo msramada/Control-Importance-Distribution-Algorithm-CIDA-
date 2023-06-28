@@ -7,17 +7,18 @@ ru = 1
 ry = 2
 Q = 0.2 * np.diag(np.ones(rx,))
 R = 0.4 * np.diag(np.ones(ry,))
-V = 5
+V = 10
 def stateDynamics(x, u, w):
     x = x.squeeze()
     w = w.squeeze()
     u = u.squeeze()
-    f = np.zeros((rx,1))
+    f = np.zeros((rx,))
     tau = 0.1
     f[0] = x[0] + tau * V * np.sin(u * tau / 2) / (u * tau / 2) * np.cos(x[2] + u * tau / 2)
     f[1] = x[1] + tau * V * np.sin(u * tau / 2) / (u * tau / 2) * np.sin(x[2] + u * tau / 2)
     f[2] = x[2] + tau * u
-    f[2] = f[2] % (2*np.pi)
+    f = f + w
+    f[2] = f[2] % (2*np.pi) - np.pi
     return np.atleast_2d(f.squeeze()).T
 
 def measurementDynamics(x, u):
@@ -29,7 +30,7 @@ def measurementDynamics(x, u):
 
 r=10.0
 # Obstacles params
-xs = np.array([5, 0, -10])
+xs = np.array([50, 50, 50])
 ys = np.array([5, -12, 7])
 rs = np.array([3, 2, 3])
 
