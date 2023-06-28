@@ -24,7 +24,7 @@ def measurementDynamics(x, u):
     x = x.squeeze()
     u = u.squeeze()
     gx = np.zeros((ry, 1))
-    gx = x[0:ry+1]
+    gx = x[0:ry]
     return np.atleast_2d(gx.squeeze()).T
 
 r=10.0

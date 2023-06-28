@@ -39,7 +39,7 @@ class ParticleFilter(Model): #x0 2D column vector
         u = u.squeeze()
         for j in range(self.num_particles):
             xj = self.particles[:,j]
-            measurementError = y - self.g(xj, u)
+            measurementError = y - self.g(xj, u).squeeze()
             measurementError = measurementError.squeeze()
             log_prob_perSample[j] = -1/2 * measurementError @ np.linalg.inv(self.R) @ measurementError
         Likelihoods=np.exp(log_prob_perSample)
