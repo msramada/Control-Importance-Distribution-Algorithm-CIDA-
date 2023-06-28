@@ -18,7 +18,7 @@ def stateDynamics(x, u, w):
     f[1] = x[1] + tau * V * np.sin(u * tau / 2) / (u * tau / 2) * np.sin(x[2] + u * tau / 2)
     f[2] = x[2] + tau * u
     f = f + w
-    f[2] = f[2] % (2*np.pi) - np.pi
+    f[2] = np.arctan2(np.sin(f[2]), np.cos(f[2]))
     return np.atleast_2d(f.squeeze()).T
 
 def measurementDynamics(x, u):
@@ -55,7 +55,9 @@ def Controller(state): #Here you define your controller, whether an MPC, SMPC, C
     result = prob.solve()
     uStar = u.value
     theta_star = np.arctan2(uStar[1],uStar[0])
-    angularVel = np.pi/4 * np.sign(theta_star-theta)
+    theta_error = theta_star-theta
+    theta_error = np.arctan2(np.sin(theta_error), np.cos(theta_error))
+    angularVel = np.pi/4 * np.sign(theta_error)
     return angularVel
 
 
