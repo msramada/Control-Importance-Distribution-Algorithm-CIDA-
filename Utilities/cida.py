@@ -28,7 +28,7 @@ class CIDA(ParticleFilter):
         return xkprime, Control_seq
 
     def sample_xk_dblPrime(self, Control_seq): #Generating state sequence x_k'' for k=0,...,N-1
-        xk2prime = np.full((2, self.Pred_Horizon_N+1), np.nan)
+        xk2prime = np.full((rx, self.Pred_Horizon_N+1), np.nan)
         W2prime = sqrtm(self.Q).real @ np.random.randn(rx, self.Pred_Horizon_N)
         x02prime = self.particles[:,random.sample(range(0, self.num_particles), 1)]
         xk2prime[:,0]=x02prime.reshape(rx,)
@@ -54,10 +54,10 @@ class CIDA(ParticleFilter):
             ControlSeqCost[i] = ControlSeqCost[i] / self.M
         minCost_index = ControlSeqCost.argmin()
         BestControlSequence = ControlSeqRec[minCost_index]
-        return BestControlSequence
+        return BestControlSequence[:,0]
 
     def ViolationProb(self): #calculates violation rates
-        _, number_of_violations = CostAndConstraints(0, self.particles)
+        _, number_of_violations = CostAndConstraints(0.0, self.particles)
         ViolationRate = number_of_violations / self.num_particles
         return ViolationRate
 
