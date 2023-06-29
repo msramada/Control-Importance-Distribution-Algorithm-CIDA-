@@ -39,9 +39,9 @@ class CIDA(ParticleFilter):
 
     # Random Search of CIDA
     def RandomSearch(self):
-        ControlSeqCost = np.zeros((self.num_particles,))
+        ControlSeqCost = np.zeros((self.M,))
         ControlSeqRec = deque([])
-        for i in range(self.num_particles):
+        for i in range(self.M):
             x0prime=self.particles[:,random.sample(range(0, self.num_particles), 1)]
             _, Control_seq = self.sample_xk_prime(x0prime)
             ControlSeqRec.append(Control_seq)

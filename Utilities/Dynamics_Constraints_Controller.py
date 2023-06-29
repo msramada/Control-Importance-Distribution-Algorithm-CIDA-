@@ -5,8 +5,8 @@ import cvxpy as cp
 rx = 3
 ru = 1
 ry = 2
-Q = 0.2 * np.diag(np.ones(rx,))
-R = 0.4 * np.diag(np.ones(ry,))
+Q = 0.1 * np.diag(np.ones(rx,))
+R = 0.2 * np.diag(np.ones(ry,))
 V = 10
 def stateDynamics(x, u, w):
     x = x.squeeze()
@@ -30,8 +30,8 @@ def measurementDynamics(x, u):
 
 r=10.0
 # Obstacles params
-xs = np.array([50, 50, 50])
-ys = np.array([5, -12, 7])
+xs = np.array([5, -3, -9])
+ys = np.array([5, -9, 9])
 rs = np.array([3, 2, 3])
 
 def Controller(state): #Here you define your controller, whether an MPC, SMPC, CBF, PID, whatever...
@@ -44,12 +44,12 @@ def Controller(state): #Here you define your controller, whether an MPC, SMPC, C
     Fx = np.cos(theta_d) 
     Fy = np.sin(theta_d) 
     u = cp.Variable((2,))
-    objective = cp.Minimize(cp.quad_form(u - np.array([Fx, Fy]), np.diag(np.ones(2,))))
+    objective = cp.Minimize(cp.quad_form(u - np.array([Fx, Fy]).squeeze(), np.diag(np.ones(2,))))
     Del_h_mat = np.full((3,2), 0.0)
     alpha_h_vec = np.full((3,), 0.0)
     for nn in range(3):
         alpha_h_vec[nn] = (x-xs[nn]) ** 2 + (y-ys[nn]) ** 2 - rs[nn] ** 2
-        Del_h_mat[nn,:] = 2 * np.array([x-xs[nn], y-ys[nn]])
+        Del_h_mat[nn,:] = 2 * np.array([x-xs[nn], y-ys[nn]]).squeeze()
     constraints = [Del_h_mat @ u >= -0.05*alpha_h_vec]
     prob = cp.Problem(objective,constraints)
     result = prob.solve()
@@ -57,16 +57,22 @@ def Controller(state): #Here you define your controller, whether an MPC, SMPC, C
     theta_star = np.arctan2(uStar[1],uStar[0])
     theta_error = theta_star-theta
     theta_error = np.arctan2(np.sin(theta_error), np.cos(theta_error))
-    angularVel = np.pi/4 * np.sign(theta_error)
+    angularVel = np.clip(10 * (theta_error), -np.pi*2, np.pi*2)
     return angularVel
 
 
 def CostAndConstraints(Control_seq,xk2prime):
-        #cost = (xk2prime[0:2,:] ** 2).sum() + (Control_seq ** 2).sum()
-        cost = 0
+        d = np.sqrt( xk2prime[0,:] ** 2 + xk2prime[1,:] ** 2)
+        gamma = np.arctan2(xk2prime[1,:], xk2prime[0,:])
+        cost_d = ( (d-r) ** 2).sum()
+        theta_d = gamma - np.pi/2 - np.arctan(0.3 * (d-r))
+        error = theta_d - xk2prime[2,:]
+        error = np.arctan2(np.sin(error), np.cos(error))
+        cost_theta = (error ** 2).sum()
+        cost = cost_d * 0 + cost_theta * 1
         # Bounds on the control
-        Control_violations = abs(Control_seq) > 5
-        Control_violations = np.append(Control_violations, False)
+        #Control_violations = abs(Control_seq) > 5
+        #Control_violations = np.append(Control_violations, False)
         # Linear state constraints violation: Hx > b
         xx = xk2prime[0,:].squeeze()
         yy = xk2prime[1,:].squeeze()
@@ -76,5 +82,5 @@ def CostAndConstraints(Control_seq,xk2prime):
             State_violations += (h_value < 0).sum()
         #number_of_violations = (State_violations.squeeze() | Control_violations.squeeze()).sum()
         number_of_violations = State_violations
-        return cost*0, number_of_violations
+        return cost, number_of_violations
 
