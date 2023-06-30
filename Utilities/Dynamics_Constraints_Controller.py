@@ -1,7 +1,7 @@
 import numpy as np
 import control 
 import cvxpy as cp
-
+from scipy import interpolate
 rx = 3
 ru = 1
 ry = 3
@@ -36,18 +36,38 @@ xs = np.array([8, -3, -10])
 ys = np.array([-5, -9, 10])
 rs = np.array([2, 2, 3])
 
+# Load control data for interpolation
+# Run DP_ValueIteration_MCGrid.py to generate the lookup table x,y,u
+xx= np.load('Utilities/ControllerData/KlookuptableX.npy')
+yy= np.load('Utilities/ControllerData/KlookuptableY.npy')
+UU= np.load('Utilities/ControllerData/KlookuptableU.npy')
+K_LT = interpolate.interp2d(xx, yy, UU, kind='linear') 
+
+def controller(state): #Here you define your controller, whether an MPC, SMPC, CBF, PID, whatever...
+    theta_star=K_LT(state[0].reshape(1,),state[1].reshape(1,))
+    theta = state[2]
+    theta_error = theta_star-theta
+    theta_error = np.arctan2(np.sin(theta_error), np.cos(theta_error))
+    angularVel = np.clip(5 * (theta_error), -np.pi, np.pi)
+    return angularVel
+
+def thetaError(state): #Here you define your controller, whether an MPC, SMPC, CBF, PID, whatever...
+    theta_star=K_LT(state[0].reshape(1,),state[1].reshape(1,))
+    theta = state[2]
+    theta_error = theta_star-theta
+    theta_error = np.arctan2(np.sin(theta_error), np.cos(theta_error))
+    return theta_error
+
+
 def Controller(state): #Here you define your controller, whether an MPC, SMPC, CBF, PID, whatever...
     x = state[0]
     y = state[1]
     theta = state[2]
-    a = 5
     d = np.sqrt(x**2 + y**2)
     gamma = np.arctan2(y, x)
     theta_d = gamma - np.pi/2 - np.arctan(0.3 * (d-r))
-    beta = 0.3 / (1 + (0.3 * (d-r))**2)
-    theta_c = theta_d + V/(d*a) * np.sin(theta - gamma) - beta/a*V*np.cos(theta-gamma)
-    Fx = np.cos(theta_c) 
-    Fy = np.sin(theta_c) 
+    Fx = np.cos(theta_d) 
+    Fy = np.sin(theta_d) 
     u = cp.Variable((2,))
     objective = cp.Minimize(cp.quad_form(u - np.array([Fx, Fy]).squeeze(), np.diag(np.ones(2,))))
     Del_h_mat = np.full((3,2), 0.0)
@@ -71,13 +91,11 @@ def CostAndConstraints(Control_seq, xk2prime):
         gamma = np.arctan2(xk2prime[1,:], xk2prime[0,:])
         cost_d = ( (d-r) ** 2 ).sum()
         theta_d = gamma - np.pi/2 - np.arctan(0.3 * (d-r))
-        a = 5
-        beta = 0.3 / (1 + (0.3 * (d-r))**2)
-        theta_c = theta_d + V/(d*a) * np.sin(theta_d - gamma) - beta/a*V*np.cos(theta_d-gamma)
-        error = theta_c - xk2prime[2,:]
-        error = np.arctan2(np.sin(error), np.cos(error))
+        error = xk2prime[2,:] * 0
+        for j in range(len(xk2prime[2,:])):
+             error[j] = thetaError(xk2prime[:,j])
         cost_theta = (error ** 2).sum()
-        cost = cost_d * 0.05 + cost_theta * 1 
+        cost = cost_d * 0.0 + cost_theta * 1 
         # Bounds on the control
         #Control_violations = abs(Control_seq) > 5
         #Control_violations = np.append(Control_violations, False)
