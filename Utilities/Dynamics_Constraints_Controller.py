@@ -16,8 +16,8 @@ def stateDynamics(x, u, w):
     u = u.squeeze()
     f = np.zeros((rx,))
     tau = 0.2
-    f[0] = x[0] + tau * V * np.sin(u * tau / 2) / (u * tau / 2) * np.cos(x[2] + u * tau / 2)
-    f[1] = x[1] + tau * V * np.sin(u * tau / 2) / (u * tau / 2) * np.sin(x[2] + u * tau / 2)
+    f[0] = x[0] + tau * V * np.sinc(u * tau / 2) * np.cos(x[2] + u * tau / 2)
+    f[1] = x[1] + tau * V * np.sinc(u * tau / 2) * np.sin(x[2] + u * tau / 2)
     f[2] = x[2] + tau * u
     f = f + w
     f[2] = np.arctan2(np.sin(f[2]), np.cos(f[2]))
