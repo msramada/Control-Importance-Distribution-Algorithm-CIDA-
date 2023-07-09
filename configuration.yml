@@ -1,0 +1,15 @@
+
+T: 100
+num_particles: 1000
+Pred_Horizon_N: 6
+number_of_simulations: 100
+LangrangeMultp: 1000
+
+
+
+rx: 3
+ru: 1
+ry: 3
+V: 5
+
+tau: 0.2

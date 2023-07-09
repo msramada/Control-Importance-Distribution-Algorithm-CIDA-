@@ -2,23 +2,24 @@ import numpy as np
 import control 
 import cvxpy as cp
 from scipy import interpolate
-rx = 3
-ru = 1
-ry = 3
-Q = 0.2 * np.diag(np.ones(rx,))
+import yaml
+
+configuration = yaml.load(open('../configuration.yml', 'r'), Loader=yaml.Loader)
+
+Q = 0.2 * np.diag(np.ones(configuration['rx'],))
 Q[2,2] = 0.1
-R = 0.1 * np.diag(np.ones(ry,))
+R = 0.1 * np.diag(np.ones(configuration['ry'],))
 R[2,2] = 0.1
-V = 5
+
 def stateDynamics(x, u, w):
     x = x.squeeze()
     w = w.squeeze()
     u = u.squeeze()
     f = np.zeros((rx,))
-    tau = 0.2
-    f[0] = x[0] + tau * V * np.sinc(u * tau / 2) * np.cos(x[2] + u * tau / 2)
-    f[1] = x[1] + tau * V * np.sinc(u * tau / 2) * np.sin(x[2] + u * tau / 2)
-    f[2] = x[2] + tau * u
+    #configuration['tau'] = 0.2
+    f[0] = x[0] + configuration['tau'] * configuration['V'] * np.sinc(u * configuration['tau'] / 2) * np.cos(x[2] + u * configuration['tau'] / 2)
+    f[1] = x[1] + configuration['tau'] * configuration['V'] * np.sinc(u * configuration['tau'] / 2) * np.sin(x[2] + u * configuration['tau'] / 2)
+    f[2] = x[2] + configuration['tau'] * u
     f = f + w
     f[2] = np.arctan2(np.sin(f[2]), np.cos(f[2]))
     return np.atleast_2d(f.squeeze()).T
