@@ -4,7 +4,17 @@ from scipy.linalg import sqrtm
 from Utilities.ParticleFilter import ParticleFilter
 import random
 from collections import deque
-
+configuration = yaml.load(open('./configuration.yml', 'r'), Loader=yaml.Loader)
+rx = configuration['rx']
+T = configuration['T']
+num_particles = configuration['num_particles']
+Pred_Horizon_N = configuration['Pred_Horizon_N']
+number_of_simulations = configuration['number_of_simulations']
+LangrangeMultp = configuration['LangrangeMultp']
+ru = configuration['ru']
+ry = configuration['ry']
+V = configuration['V']
+tau = configuration['tau']
 class CIDA(ParticleFilter):
     def __init__(self, x0, Cov0, num_particles, stateDynamics, measurementDynamics, Q, R,
                  Pred_Horizon_N, Controller, M, CostAndConstraints, LangrangeMultp):

@@ -4,8 +4,17 @@ import cvxpy as cp
 from scipy import interpolate
 import yaml
 
-configuration = yaml.load(open('../configuration.yml', 'r'), Loader=yaml.Loader)
-
+configuration = yaml.load(open('./configuration.yml', 'r'), Loader=yaml.Loader)
+rx = configuration['rx']
+T = configuration['T']
+num_particles = configuration['num_particles']
+Pred_Horizon_N = configuration['Pred_Horizon_N']
+number_of_simulations = configuration['number_of_simulations']
+LangrangeMultp = configuration['LangrangeMultp']
+ru = configuration['ru']
+ry = configuration['ry']
+V = configuration['V']
+tau = configuration['tau']
 Q = 0.2 * np.diag(np.ones(configuration['rx'],))
 Q[2,2] = 0.1
 R = 0.1 * np.diag(np.ones(configuration['ry'],))
