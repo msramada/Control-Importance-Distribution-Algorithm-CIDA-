@@ -99,24 +99,18 @@ def Controller(state): #Here you define your controller, whether an MPC, SMPC, C
 def CostAndConstraints(Control_seq, xk2prime):
         d = np.sqrt( xk2prime[0,:] ** 2 + xk2prime[1,:] ** 2)
         gamma = np.arctan2(xk2prime[1,:], xk2prime[0,:])
-        cost_d = ( (d-r) ** 2 ).sum()
         theta_d = gamma - np.pi/2 - np.arctan(0.3 * (d-r))
         error = xk2prime[2,:] * 0
         for j in range(len(xk2prime[2,:])):
              error[j] = thetaError(xk2prime[:,j])
-        cost_theta = (error ** 2).sum()
-        cost = cost_d * 0.0 + cost_theta * 1 
-        # Bounds on the control
-        #Control_violations = abs(Control_seq) > 5
-        #Control_violations = np.append(Control_violations, False)
-        # Linear state constraints violation: Hx > b
+        cost = (error ** 2).sum()
+
         xx = xk2prime[0,:].squeeze()
         yy = xk2prime[1,:].squeeze()
-        State_violations = 0
+        violation_flag = np.full(error.shape, False)
         for nn in range(3):
             h_value = (xx-xs[nn]) ** 2 + (yy-ys[nn]) ** 2 - rs[nn] ** 2
-            State_violations += (h_value < 0).sum()
+            violation_flag = violation_flag | (h_value < 0)
         #number_of_violations = (State_violations.squeeze() | Control_violations.squeeze()).sum()
-        number_of_violations = State_violations
-        return cost, number_of_violations
+        return cost, violation_flag
 

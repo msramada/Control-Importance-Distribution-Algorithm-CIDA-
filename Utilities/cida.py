@@ -15,6 +15,7 @@ ru = configuration['ru']
 ry = configuration['ry']
 V = configuration['V']
 tau = configuration['tau']
+alpha = configuration['alpha']
 class CIDA(ParticleFilter):
     def __init__(self, x0, Cov0, num_particles, stateDynamics, measurementDynamics, Q, R,
                  Pred_Horizon_N, Controller, M, CostAndConstraints, LangrangeMultp):
@@ -55,20 +56,24 @@ class CIDA(ParticleFilter):
             x0prime=self.particles[:,random.sample(range(0, self.num_particles), 1)]
             _, Control_seq = self.sample_xk_prime(x0prime)
             ControlSeqRec.append(Control_seq)
+            ratio_of_violations = np.zeros((self.Pred_Horizon_N+1,))
             for q in range(self.M):
                 xk2prime = self.sample_xk_dblPrime(Control_seq)
-                cost, number_of_violations = CostAndConstraints(Control_seq, xk2prime)
-                ControlSeqCost[i] += (cost + 
-                    self.LangrangeMultp * number_of_violations) / self.Pred_Horizon_N
-                
-            ControlSeqCost[i] = ControlSeqCost[i] / self.M
+                cost, violation_flag = CostAndConstraints(Control_seq, xk2prime)
+                ratio_of_violations += violation_flag / self.M
+                ControlSeqCost[i] += cost / self.Pred_Horizon_N
+            if all(ratio_of_violations<=alpha):    
+                ControlSeqCost[i] = ControlSeqCost[i] / self.M
+            else:
+                ControlSeqCost[i] = 10**6 + 10*ratio_of_violations.max()
+                print('soft constraints were used.')
         minCost_index = ControlSeqCost.argmin()
         BestControlSequence = ControlSeqRec[minCost_index]
         return BestControlSequence[:,0]
 
     def ViolationProb(self): #calculates violation rates
         _, number_of_violations = CostAndConstraints(0.0, self.particles)
-        ViolationRate = number_of_violations / self.num_particles
+        ViolationRate = number_of_violations.sum() / self.num_particles
         return ViolationRate
 
 
