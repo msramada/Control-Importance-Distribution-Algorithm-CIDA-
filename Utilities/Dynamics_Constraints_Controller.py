@@ -42,9 +42,9 @@ def measurementDynamics(x, u):
 
 r=10.0
 # Obstacles params
-xs = np.array([8, -3, -10])
+xs = np.array([9, -10, -7])
 ys = np.array([-5, -9, 10])
-rs = np.array([2, 2, 3])
+rs = np.array([3, 4, 3])
 
 # Load control data for interpolation
 # Run DP_ValueIteration_MCGrid.py to generate the lookup table x,y,u

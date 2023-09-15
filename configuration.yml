@@ -1,8 +1,8 @@
 
 T: 150
 num_particles: 1000
-Pred_Horizon_N: 6
-number_of_simulations: 100
+Pred_Horizon_N: 10
+number_of_simulations: 150
 LangrangeMultp: 1000
 alpha: 0.05
 
